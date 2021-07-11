@@ -1,0 +1,17 @@
+{
+  "server": {
+    "port": 8080,
+    "host": "0.0.0.0",
+    "debug": true
+  },
+  "auth": {
+    "hmac_shared_key": "shared_key"
+  },
+  "db": {
+    "host": "postgres",
+    "port": 5432,
+    "user": "postgres",
+    "password": "password",
+    "database": "billing"
+  }
+}

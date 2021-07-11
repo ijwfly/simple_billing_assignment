@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  app:
+    build: .
+    image: simple_billing
+    entrypoint: sh -c 'python main.py'
+    ports:
+    - "8080:8080"

@@ -1,0 +1,286 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Simple Billing API
+  description: "API простого биллинга"
+
+paths:
+  /billing/v1/create_wallet:
+    post:
+      summary: Создание кошелька для пользователя (существующего в другой системе)
+      parameters:
+        - in: header
+          name: X-Signature
+          description: "hmac-имитовставка"
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletRequest'
+      responses:
+        '200':
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWalletResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /billing/v1/wallet_credit:
+    post:
+      summary: Зачисление средств на кошелёк
+      parameters:
+        - in: header
+          name: X-Signature
+          description: "hmac-имитовставка"
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletCreditRequest'
+      responses:
+        '200':
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletCreditResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /billing/v1/wallet_debit:
+    post:
+      summary: Списание денег с кошелька
+      parameters:
+        - in: header
+          name: X-Signature
+          description: "hmac-имитовставка"
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletDebitRequest'
+      responses:
+        '200':
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDebitResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /billing/v1/wallet_p2p_transfer:
+    post:
+      summary: Перевод на другой кошелёк
+      parameters:
+        - in: header
+          name: X-Signature
+          description: "hmac-имитовставка"
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletP2PTransferRequest'
+      responses:
+        '200':
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletP2PTransferResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    CreateWalletRequest:
+      required:
+        - operation_id
+        - user_id
+      properties:
+        operation_id:
+          description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
+          type: string
+        user_id:
+          description: "Идентификатор пользователя"
+          type: integer
+
+    CreateWalletResponse:
+      required:
+        - operation_id
+        - code
+        - billing_id
+      properties:
+        operation_id:
+          description: "Идентификатор операции"
+          type: string
+        code:
+          description: >
+            Код ответа.
+              *  0 - Метод выполнен успешно
+              *  101 - Неверный формат данных (пропущены необходимые поля)
+              *  201 - Кошелёк для пользователя с таким user_id уже существует
+          type: integer
+          enum: [0, 101, 201]
+        billing_id:
+          description: "Идентификатор кошелька в биллинге"
+          type: string
+
+    WalletCreditRequest:
+      required:
+        - operation_id
+        - billing_id
+        - amount
+      properties:
+        operation_id:
+          description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
+          type: string
+        billing_id:
+          description: "Идентификатор кошелька в биллинге"
+          type: string
+        amount:
+          description: "Сумма в центах"
+          type: integer
+
+    WalletCreditResponse:
+      required:
+        - operation_id
+        - code
+      properties:
+        operation_id:
+          description: "Идентификатор операции"
+          type: string
+        code:
+          description: >
+            Код ответа.
+              *  0 - Метод выполнен успешно
+              *  101 - Неверный формат данных (пропущены необходимые поля)
+              *  201 - Кошелёк не найден
+          type: integer
+          enum: [0, 101, 201]
+
+    WalletDebitRequest:
+      required:
+        - operation_id
+        - billing_id
+        - amount
+      properties:
+        operation_id:
+          description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
+          type: string
+        billing_id:
+          description: "Идентификатор кошелька в биллинге"
+          type: string
+        amount:
+          description: "Сумма в центах"
+          type: integer
+
+    WalletDebitResponse:
+      required:
+        - operation_id
+        - code
+      properties:
+        operation_id:
+          description: "Идентификатор операции"
+          type: string
+        code:
+          description: >
+            Код ответа.
+              *  0 - Метод выполнен успешно
+              *  101 - Неверный формат данных (пропущены необходимые поля)
+              *  201 - Кошелёк не найден
+              *  202 - Недостаточно средств
+          type: integer
+          enum: [0, 101, 201, 202]
+
+    WalletP2PTransferRequest:
+      required:
+        - operation_id
+        - from_billing_id
+        - to_billing_id
+        - amount
+      properties:
+        operation_id:
+          description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
+          type: string
+        from_billing_id:
+          description: "Идентификатор кошелька отправителя"
+          type: string
+        to_billing_id:
+          description: "Идентификатор кошелька получателя"
+          type: string
+        amount:
+          description: "Сумма в центах"
+          type: integer
+
+    WalletP2PTransferResponse:
+      required:
+        - operation_id
+        - code
+      properties:
+        operation_id:
+          description: "Идентификатор операции"
+          type: string
+        code:
+          description: >
+            Код ответа.
+              *  0 - Метод выполнен успешно
+              *  101 - Неверный формат данных (пропущены необходимые поля)
+              *  201 - Кошелёк не найден
+              *  202 - Недостаточно средств
+          type: integer
+          enum: [0, 101, 201, 202]
+
+    Error:
+      type: object
+      description: "Схема сообщения об ошибке обработки запроса"
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: "Код ошибки"
+              type: integer
+            message:
+              description: "Описание ошибок формата запроса"
+              type: string
+
+  responses:
+    Forbidden:
+      description: "Ошибка при проверке подписи"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: 403
+              message: "Wrong signature"
+    InternalServerError:
+      description: "Ошибка на сервере"
