@@ -135,7 +135,7 @@ components:
       required:
         - operation_id
         - code
-        - billing_id
+        - wallet_id
       properties:
         operation_id:
           description: "Идентификатор операции"
@@ -148,21 +148,21 @@ components:
               *  201 - Кошелёк для пользователя с таким user_id уже существует
           type: integer
           enum: [0, 101, 201]
-        billing_id:
-          description: "Идентификатор кошелька в биллинге"
+        wallet_id:
+          description: "Идентификатор кошелька"
           type: string
 
     WalletCreditRequest:
       required:
         - operation_id
-        - billing_id
+        - wallet_id
         - amount
       properties:
         operation_id:
           description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
           type: string
-        billing_id:
-          description: "Идентификатор кошелька в биллинге"
+        wallet_id:
+          description: "Идентификатор кошелька"
           type: string
         amount:
           description: "Сумма в центах"
@@ -188,14 +188,14 @@ components:
     WalletDebitRequest:
       required:
         - operation_id
-        - billing_id
+        - wallet_id
         - amount
       properties:
         operation_id:
           description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
           type: string
-        billing_id:
-          description: "Идентификатор кошелька в биллинге"
+        wallet_id:
+          description: "Идентификатор кошелька"
           type: string
         amount:
           description: "Сумма в центах"
@@ -222,17 +222,17 @@ components:
     WalletP2PTransferRequest:
       required:
         - operation_id
-        - from_billing_id
-        - to_billing_id
+        - from_wallet_id
+        - to_wallet_id
         - amount
       properties:
         operation_id:
           description: "Идентификатор операции. Метод идемпотентный, при повторной отправке запроса с идентичным operation_id новый процесс создания кошелька запущен не будет"
           type: string
-        from_billing_id:
+        from_wallet_id:
           description: "Идентификатор кошелька отправителя"
           type: string
-        to_billing_id:
+        to_wallet_id:
           description: "Идентификатор кошелька получателя"
           type: string
         amount:
