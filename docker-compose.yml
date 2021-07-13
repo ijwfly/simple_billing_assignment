@@ -12,6 +12,15 @@ services:
     ports:
     - "8080:8080"
 
+  functional_tests:
+    image: simple_billing
+    entrypoint: sh -c 'pytest tests'
+    # entrypoint: sh -c 'while true; do foo; sleep 2; done'
+    volumes:
+      - ./:/usr/src/app/
+    depends_on:
+      - app
+
   postgres:
     image: postgres:13
     volumes:

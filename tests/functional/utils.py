@@ -1,13 +1,17 @@
-import httpx
-
-from tests.functional.conftest import APP_URL
+from asyncpg import Pool
 
 
-async def send_request(url: str, data: dict, headers: dict = None):
-    headers = headers or {}
-    client = httpx.AsyncClient(
-        base_url=APP_URL,
-    )
-    resp = await client.post(url=url, json=data, headers=headers)
-    await client.aclose()
-    return resp
+class DBHelper:
+    def __init__(self, connection_pool: Pool):
+        self.connection_pool = connection_pool
+
+    async def clear_db(self):
+        sql = """
+        delete from billing.transaction;
+        delete from billing.wallet;
+        """
+        await self.connection_pool.execute(sql)
+
+    async def get_wallet(self, wallet_id: int):
+        sql = f"select * from billing.wallet where id = {wallet_id}"
+        return await self.connection_pool.fetch(sql)
