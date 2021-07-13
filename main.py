@@ -1,7 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from tortoise import Tortoise
 
+from app.billing.exceptions import request_validation_error_handler, unhandled_exception_handler
 from app.billing.handlers import router as billing_router
 from app.config import get_app_config, AppConfig
 
@@ -47,7 +49,11 @@ def build_app(config: AppConfig):
         ],
         on_shutdown=[
             db_disconnect
-        ]
+        ],
+        exception_handlers={
+            RequestValidationError: request_validation_error_handler,
+            Exception: unhandled_exception_handler,
+        },
     )
     app.include_router(
         billing_router,
