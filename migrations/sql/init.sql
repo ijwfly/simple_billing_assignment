@@ -6,13 +6,17 @@ CREATE TYPE billing.direction AS ENUM('credit', 'debit');
 CREATE TABLE billing.transaction
 (
     id bigserial PRIMARY KEY,
+    operation_id text NOT NULL,
     wallet_id bigint NOT NULL,
-    status billing.transaction_status NOT NULL,
+    status billing.transaction_status NOT NULL DEFAULT 'registered',
     direction billing.direction NOT NULL,
-    amount bigint NOT NULL DEFAULT 0
+    amount bigint NOT NULL DEFAULT 0,
+    cdate timestamp WITH TIME ZONE NOT NULL default NOW()
 );
 
 CREATE INDEX wallet_id_idx ON billing.transaction using hash(wallet_id);
+CREATE INDEX operation_id_idx ON billing.transaction using hash(operation_id);
+CREATE INDEX cdate_idx ON billing.transaction using btree(cdate);
 
 CREATE TABLE billing.wallet
 (

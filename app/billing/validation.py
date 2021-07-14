@@ -1,4 +1,5 @@
 import pydantic
+from pydantic import PositiveInt, NonNegativeInt
 
 
 class BaseBillingRequestModel(pydantic.BaseModel):
@@ -7,13 +8,22 @@ class BaseBillingRequestModel(pydantic.BaseModel):
 
 class BaseBillingResponseModel(pydantic.BaseModel):
     operation_id: str
-    code: int = 0
+    code: NonNegativeInt = 0
     message: str = "Success"
 
 
 class CreateWalletRequest(BaseBillingRequestModel):
-    user_id: int
+    user_id: NonNegativeInt
 
 
 class CreateWalletResponse(BaseBillingResponseModel):
-    wallet_id: int
+    wallet_id: NonNegativeInt
+
+
+class WalletCreditRequest(BaseBillingRequestModel):
+    wallet_id: NonNegativeInt
+    amount: PositiveInt
+
+
+class WalletCreditResponse(BaseBillingResponseModel):
+    pass

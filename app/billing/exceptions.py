@@ -25,3 +25,4 @@ def generate_common_error(code, message):
 
 class CommonErrors:
     wallet_already_exists = (201, 'Wallet already exists')
+    wallet_not_found = (202, 'Wallet not found')
