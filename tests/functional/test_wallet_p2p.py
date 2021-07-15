@@ -27,7 +27,7 @@ class TestWalletDebit:
         'from_balance, amount, from_balance_result, to_balance_result, resp_code, trans_status',
         [
             (5000, 100, 5000-100, 100, 0, TransactionStatus.completed.value),
-            (5000, 5500, 5000, 0, 203, TransactionStatus.error.value),
+            (5000, 5500, 5000, 0, 301, TransactionStatus.declined.value),
         ]
     )
     async def test_straightforward(self, db_helper, send_request, from_balance, amount, resp_code,

@@ -29,8 +29,26 @@ async def unhandled_exception_handler(request, exc: Exception):
     )
 
 
-class BillingErrors:
+class BillingErrorClass:
+    # системные ошибки
+    system_error = 'system_error'
+    # бизнесовые ошибки
+    business_domain_error = 'business_domain_error'
+    # неизвестные ошибки
+    unknown_error = 'unknown_error'
+
+
+class BillingError:
     wallet_already_exists = (201, 'Wallet already exists')
     wallet_not_found = (202, 'Wallet not found')
-    # TODO: переместить в отдельный класс ошибок для корректной обработки (статус транзакции должен быть declined)
-    insufficient_funds = (203, 'Insufficient funds')
+
+    insufficient_funds = (301, 'Insufficient funds')
+
+    @staticmethod
+    def get_error_class(error_code):
+        if 200 <= error_code <= 299:
+            return BillingErrorClass.system_error
+        elif 300 <= error_code <= 399:
+            return BillingErrorClass.business_domain_error
+        else:
+            return BillingErrorClass.unknown_error

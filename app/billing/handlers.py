@@ -3,7 +3,7 @@ from tortoise.exceptions import IntegrityError, DoesNotExist
 from tortoise.transactions import in_transaction
 
 from app.billing.enums import TransactionDirection
-from app.billing.exceptions import BillingErrors, BillingException
+from app.billing.exceptions import BillingError, BillingException
 from app.billing.models import Wallet, Transaction
 from app.billing.validation import (CreateWalletResponse, CreateWalletRequest, WalletCreditResponse,
                                     WalletCreditRequest, WalletDebitResponse, WalletDebitRequest,
@@ -23,7 +23,7 @@ async def billing_create_wallet(
     try:
         wallet = await Wallet.create(user_id=create_wallet_request.user_id)
     except IntegrityError:
-        raise BillingException(*BillingErrors.wallet_already_exists)
+        raise BillingException(*BillingError.wallet_already_exists)
 
     return CreateWalletResponse(
         operation_id=create_wallet_request.operation_id,
@@ -48,7 +48,7 @@ async def billing_wallet_credit(
         try:
             wallet = await Wallet.select_for_update().using_db(connection).get(id=wallet_credit_request.wallet_id)
         except DoesNotExist:
-            raise BillingException(*BillingErrors.wallet_not_found)
+            raise BillingException(*BillingError.wallet_not_found)
 
         wallet.balance += wallet_credit_request.amount
         await wallet.save(using_db=connection)
@@ -74,10 +74,10 @@ async def billing_wallet_debit(
         try:
             wallet = await Wallet.select_for_update().using_db(connection).get(id=wallet_debit_request.wallet_id)
         except DoesNotExist:
-            raise BillingException(*BillingErrors.wallet_not_found)
+            raise BillingException(*BillingError.wallet_not_found)
 
         if wallet.balance < wallet_debit_request.amount:
-            raise BillingException(*BillingErrors.insufficient_funds)
+            raise BillingException(*BillingError.insufficient_funds)
 
         wallet.balance -= wallet_debit_request.amount
         await wallet.save(using_db=connection)
@@ -113,10 +113,10 @@ async def billing_wallet_p2p_transfer(
             to_wallet_id = wallet_p2p_transfer_request.to_wallet_id
             to_wallet = await Wallet.select_for_update().using_db(connection).get(id=to_wallet_id)
         except DoesNotExist:
-            raise BillingException(*BillingErrors.wallet_not_found)
+            raise BillingException(*BillingError.wallet_not_found)
 
         if from_wallet.balance < wallet_p2p_transfer_request.amount:
-            raise BillingException(*BillingErrors.insufficient_funds)
+            raise BillingException(*BillingError.insufficient_funds)
 
         # TODO: можно сохранять за один запрос
         from_wallet.balance -= wallet_p2p_transfer_request.amount

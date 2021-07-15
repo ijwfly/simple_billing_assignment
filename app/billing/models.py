@@ -4,7 +4,7 @@ from datetime import datetime
 from tortoise import Model, fields
 
 from app.billing.enums import TransactionStatus, TransactionDirection
-from app.billing.exceptions import BillingException
+from app.billing.exceptions import BillingException, BillingError, BillingErrorClass
 
 
 class Transaction(Model):
@@ -26,8 +26,12 @@ class Transaction(Model):
             transaction.status = TransactionStatus.completed
             transaction.response_code = 0
         except BillingException as exc:
-            transaction.status = TransactionStatus.error
             transaction.response_code = exc.code
+            err_class = BillingError.get_error_class(exc.code)
+            if err_class == BillingErrorClass.business_domain_error:
+                transaction.status = TransactionStatus.declined
+            else:
+                transaction.status = TransactionStatus.error
             raise
         except:
             transaction.status = TransactionStatus.error

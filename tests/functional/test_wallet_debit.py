@@ -101,7 +101,7 @@ class TestWalletDebit:
 
         assert resp.status_code == 200
         resp_data = resp.json()
-        assert resp_data['code'] == 203
+        assert resp_data['code'] == 301
 
         wallet = await db_helper.get_wallet(wallet_id)
         assert wallet['balance'] == new_balance
@@ -109,6 +109,6 @@ class TestWalletDebit:
         transaction = await db_helper.get_transaction(operation_id)
         assert transaction['direction'] == TransactionDirection.debit.value
         assert transaction['operation_id'] == operation_id
-        assert transaction['status'] == TransactionStatus.error.value
+        assert transaction['status'] == TransactionStatus.declined.value
         assert transaction['amount'] == amount
         assert transaction['wallet_id'] == wallet_id
