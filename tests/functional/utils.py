@@ -20,6 +20,10 @@ class DBHelper:
         sql = f"select * from billing.transaction where operation_id = '{operation_id}'"
         return await self.connection_pool.fetchrow(sql)
 
+    async def get_multiple_transactions(self, operation_id: str):
+        sql = f"select * from billing.transaction where operation_id = '{operation_id}'"
+        return await self.connection_pool.fetch(sql)
+
     async def change_wallet_balance(self, wallet_id, amount):
         if amount >= 0:
             amount = f'+ {amount}'

@@ -36,3 +36,13 @@ class WalletDebitRequest(BaseBillingRequestModel):
 
 class WalletDebitResponse(BaseBillingResponseModel):
     pass
+
+
+class WalletP2PTransferRequest(BaseBillingRequestModel):
+    from_wallet_id: NonNegativeInt
+    to_wallet_id: NonNegativeInt
+    amount: PositiveInt
+
+
+class WalletP2PTransferResponse(BaseBillingResponseModel):
+    pass

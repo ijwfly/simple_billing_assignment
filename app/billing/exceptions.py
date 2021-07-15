@@ -32,4 +32,5 @@ async def unhandled_exception_handler(request, exc: Exception):
 class BillingErrors:
     wallet_already_exists = (201, 'Wallet already exists')
     wallet_not_found = (202, 'Wallet not found')
+    # TODO: переместить в отдельный класс ошибок для корректной обработки (статус транзакции должен быть declined)
     insufficient_funds = (203, 'Insufficient funds')

@@ -5,7 +5,7 @@ info:
   description: "API простого биллинга"
 
 paths:
-  /billing/v1/create_wallet:
+  /billing/v1/create_wallet/:
     post:
       summary: Создание кошелька для пользователя (существующего в другой системе)
       parameters:
@@ -33,7 +33,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /billing/v1/wallet_credit:
+  /billing/v1/wallet_credit/:
     post:
       summary: Зачисление средств на кошелёк
       parameters:
@@ -61,7 +61,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /billing/v1/wallet_debit:
+  /billing/v1/wallet_debit/:
     post:
       summary: Списание денег с кошелька
       parameters:
@@ -89,7 +89,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /billing/v1/wallet_p2p_transfer:
+  /billing/v1/wallet_p2p_transfer/:
     post:
       summary: Перевод на другой кошелёк
       parameters:

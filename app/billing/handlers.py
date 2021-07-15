@@ -6,7 +6,8 @@ from app.billing.enums import TransactionDirection
 from app.billing.exceptions import BillingErrors, BillingException
 from app.billing.models import Wallet, Transaction
 from app.billing.validation import (CreateWalletResponse, CreateWalletRequest, WalletCreditResponse,
-                                    WalletCreditRequest, WalletDebitResponse, WalletDebitRequest)
+                                    WalletCreditRequest, WalletDebitResponse, WalletDebitRequest,
+                                    WalletP2PTransferResponse, WalletP2PTransferRequest)
 
 router = APIRouter()
 
@@ -80,6 +81,48 @@ async def billing_wallet_debit(
 
         wallet.balance -= wallet_debit_request.amount
         await wallet.save(using_db=connection)
-    return WalletCreditResponse(
+    return WalletDebitResponse(
         operation_id=wallet_debit_request.operation_id,
+    )
+
+
+@router.post(
+    '/wallet_p2p_transfer/',
+    summary='Списание средств с кошелька',
+    response_model=WalletP2PTransferResponse,
+)
+async def billing_wallet_p2p_transfer(
+        wallet_p2p_transfer_request: WalletP2PTransferRequest
+):
+    async with Transaction.context(
+        wallet_id=wallet_p2p_transfer_request.from_wallet_id,
+        direction=TransactionDirection.debit.value,
+        amount=wallet_p2p_transfer_request.amount,
+        operation_id=wallet_p2p_transfer_request.operation_id,
+    ), Transaction.context(
+        wallet_id=wallet_p2p_transfer_request.to_wallet_id,
+        direction=TransactionDirection.credit.value,
+        amount=wallet_p2p_transfer_request.amount,
+        operation_id=wallet_p2p_transfer_request.operation_id,
+    ), in_transaction() as connection:
+        try:
+            # TODO: можно доставать за один запрос
+            from_wallet_id = wallet_p2p_transfer_request.from_wallet_id
+            from_wallet = await Wallet.select_for_update().using_db(connection).get(id=from_wallet_id)
+
+            to_wallet_id = wallet_p2p_transfer_request.to_wallet_id
+            to_wallet = await Wallet.select_for_update().using_db(connection).get(id=to_wallet_id)
+        except DoesNotExist:
+            raise BillingException(*BillingErrors.wallet_not_found)
+
+        if from_wallet.balance < wallet_p2p_transfer_request.amount:
+            raise BillingException(*BillingErrors.insufficient_funds)
+
+        # TODO: можно сохранять за один запрос
+        from_wallet.balance -= wallet_p2p_transfer_request.amount
+        to_wallet.balance += wallet_p2p_transfer_request.amount
+        await from_wallet.save(using_db=connection)
+        await to_wallet.save(using_db=connection)
+    return WalletP2PTransferResponse(
+        operation_id=wallet_p2p_transfer_request.operation_id
     )
