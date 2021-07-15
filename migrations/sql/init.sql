@@ -11,7 +11,8 @@ CREATE TABLE billing.transaction
     status billing.transaction_status NOT NULL DEFAULT 'registered',
     direction billing.direction NOT NULL,
     amount bigint NOT NULL DEFAULT 0,
-    cdate timestamp WITH TIME ZONE NOT NULL default NOW()
+    cdate timestamp WITH TIME ZONE NOT NULL default NOW(),
+    response_code integer
 );
 
 CREATE INDEX wallet_id_idx ON billing.transaction using hash(wallet_id);

@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from tortoise.exceptions import IntegrityError, DoesNotExist
 from tortoise.transactions import in_transaction
 
-from app.billing.enums import TransactionStatus, TransactionDirection
-from app.billing.exceptions import generate_common_error, CommonErrors
+from app.billing.enums import TransactionDirection
+from app.billing.exceptions import BillingErrors, BillingException
 from app.billing.models import Wallet, Transaction
-from app.billing.validation import CreateWalletResponse, CreateWalletRequest, WalletCreditResponse, WalletCreditRequest
+from app.billing.validation import (CreateWalletResponse, CreateWalletRequest, WalletCreditResponse,
+                                    WalletCreditRequest, WalletDebitResponse, WalletDebitRequest)
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ async def billing_create_wallet(
     try:
         wallet = await Wallet.create(user_id=create_wallet_request.user_id)
     except IntegrityError:
-        return generate_common_error(*CommonErrors.wallet_already_exists)
+        raise BillingException(*BillingErrors.wallet_already_exists)
 
     return CreateWalletResponse(
         operation_id=create_wallet_request.operation_id,
@@ -37,22 +38,48 @@ async def billing_create_wallet(
 async def billing_wallet_credit(
         wallet_credit_request: WalletCreditRequest
 ):
-    async with in_transaction():
-        try:
-            wallet = await Wallet.select_for_update().get(id=wallet_credit_request.wallet_id)
-        except DoesNotExist:
-            return generate_common_error(*CommonErrors.wallet_not_found)
-        transaction = await Transaction.create(
-            wallet_id=wallet.id,
-            status=TransactionStatus.registered.value,
-            direction=TransactionDirection.credit.value,
+    async with Transaction.context(
+            direction=TransactionDirection.credit,
+            wallet_id=wallet_credit_request.wallet_id,
             amount=wallet_credit_request.amount,
             operation_id=wallet_credit_request.operation_id,
-        )
+    ), in_transaction() as connection:
+        try:
+            wallet = await Wallet.select_for_update().using_db(connection).get(id=wallet_credit_request.wallet_id)
+        except DoesNotExist:
+            raise BillingException(*BillingErrors.wallet_not_found)
+
         wallet.balance += wallet_credit_request.amount
-        transaction.status = TransactionStatus.completed
-        await wallet.save()
-        await transaction.save()
+        await wallet.save(using_db=connection)
     return WalletCreditResponse(
         operation_id=wallet_credit_request.operation_id,
+    )
+
+
+@router.post(
+    '/wallet_debit/',
+    summary='Списание средств с кошелька',
+    response_model=WalletDebitResponse,
+)
+async def billing_wallet_debit(
+        wallet_debit_request: WalletDebitRequest
+):
+    async with Transaction.context(
+            wallet_id=wallet_debit_request.wallet_id,
+            direction=TransactionDirection.debit.value,
+            amount=wallet_debit_request.amount,
+            operation_id=wallet_debit_request.operation_id,
+    ), in_transaction() as connection:
+        try:
+            wallet = await Wallet.select_for_update().using_db(connection).get(id=wallet_debit_request.wallet_id)
+        except DoesNotExist:
+            raise BillingException(*BillingErrors.wallet_not_found)
+
+        if wallet.balance < wallet_debit_request.amount:
+            raise BillingException(*BillingErrors.insufficient_funds)
+
+        wallet.balance -= wallet_debit_request.amount
+        await wallet.save(using_db=connection)
+    return WalletCreditResponse(
+        operation_id=wallet_debit_request.operation_id,
     )

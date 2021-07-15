@@ -11,13 +11,14 @@ from tests.functional.utils import DBHelper
 APP_URL = 'http://app:8080'
 
 
-@pytest.fixture
-def send_request():
+@pytest.fixture(scope='session')
+async def send_request():
+    client = httpx.AsyncClient(base_url=APP_URL)
     async def _send_request(url: str, data: dict, headers: dict = None):
         headers = headers or {}
-        async with httpx.AsyncClient(base_url=APP_URL) as client:
-            return await client.post(url=url, json=data, headers=headers)
-    return _send_request
+        return await client.post(url=url, json=data, headers=headers)
+    yield _send_request
+    await client.aclose()
 
 
 @pytest.fixture

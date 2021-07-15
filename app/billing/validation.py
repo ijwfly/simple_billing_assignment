@@ -27,3 +27,12 @@ class WalletCreditRequest(BaseBillingRequestModel):
 
 class WalletCreditResponse(BaseBillingResponseModel):
     pass
+
+
+class WalletDebitRequest(BaseBillingRequestModel):
+    wallet_id: NonNegativeInt
+    amount: PositiveInt
+
+
+class WalletDebitResponse(BaseBillingResponseModel):
+    pass

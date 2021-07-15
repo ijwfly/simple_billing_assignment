@@ -1,3 +1,4 @@
+from random import randint
 from uuid import uuid4
 
 import pytest
@@ -8,8 +9,7 @@ class TestCreateWallet:
     url = '/billing/v1/create_wallet/'
 
     async def test_success(self, operation_id, db_helper, send_request):
-        await db_helper.clear_db()
-        user_id = 12345678
+        user_id = randint(0, 99999999)
         data = {
             'user_id': user_id,
             'operation_id': operation_id,
@@ -28,9 +28,7 @@ class TestCreateWallet:
         assert wallet['user_id'] == user_id
 
     async def test_already_exists(self, operation_id, db_helper, send_request):
-        await db_helper.clear_db()
-
-        user_id = 12345678
+        user_id = randint(0, 99999999)
         data = {
             'user_id': user_id,
             'operation_id': operation_id,

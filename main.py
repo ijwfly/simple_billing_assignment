@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from tortoise import Tortoise
 
-from app.billing.exceptions import request_validation_error_handler, unhandled_exception_handler
+from app.billing.exceptions import (request_validation_error_handler, unhandled_exception_handler,
+                                    billing_exception_handler, BillingException)
 from app.billing.handlers import router as billing_router
 from app.config import get_app_config, AppConfig
 
@@ -52,6 +53,7 @@ def build_app(config: AppConfig):
         ],
         exception_handlers={
             RequestValidationError: request_validation_error_handler,
+            BillingException: billing_exception_handler,
             Exception: unhandled_exception_handler,
         },
     )
