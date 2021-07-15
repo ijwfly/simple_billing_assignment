@@ -5,6 +5,7 @@
     "debug": true
   },
   "auth": {
+    "check": true,
     "hmac_shared_key": "shared_key"
   },
   "db": {

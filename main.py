@@ -1,8 +1,10 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from tortoise import Tortoise
 
+from app.auth.hmac_checker import HMACChecker
+from app.auth.hmac_signer import HMACSigner
 from app.billing.exceptions import (request_validation_error_handler, unhandled_exception_handler,
                                     billing_exception_handler, BillingException)
 from app.billing.handlers import router as billing_router
@@ -43,6 +45,12 @@ def build_app(config: AppConfig):
     async def db_disconnect():
         await Tortoise.close_connections()
 
+    dependencies = []
+    if config.auth.check:
+        dependencies.append(HMACChecker(
+            hmac_signer=HMACSigner(config.auth.hmac_shared_key)
+        ))
+
     app = FastAPI(
         debug=config.server.debug,
         on_startup=[
@@ -60,6 +68,7 @@ def build_app(config: AppConfig):
     app.include_router(
         billing_router,
         prefix='/billing/v1',
+        dependencies=[Depends(d) for d in dependencies]
     )
     return app
 

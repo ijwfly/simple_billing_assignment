@@ -1,10 +1,14 @@
 import asyncio
+import json
+import logging
 import uuid
+from base64 import b64encode
 
 import asyncpg
 import httpx
 import pytest
 
+from app.auth.hmac_signer import HMACSigner
 from app.config import get_app_config, AppConfig
 from tests.functional.utils import DBHelper
 
@@ -12,10 +16,14 @@ APP_URL = 'http://app:8080'
 
 
 @pytest.fixture(scope='session')
-async def send_request():
+async def send_request(app_config):
     client = httpx.AsyncClient(base_url=APP_URL)
     async def _send_request(url: str, data: dict, headers: dict = None):
         headers = headers or {}
+        if app_config.auth.check:
+            signer = HMACSigner(app_config.auth.hmac_shared_key)
+            headers['X-Signature'] = b64encode(signer.create_signature(json.dumps(data).encode()))
+            logging.error(str(headers))
         return await client.post(url=url, json=data, headers=headers)
     yield _send_request
     await client.aclose()

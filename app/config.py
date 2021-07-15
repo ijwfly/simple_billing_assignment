@@ -15,6 +15,7 @@ class ServerConfig(pydantic.BaseModel):
 
 
 class AuthConfig(pydantic.BaseModel):
+    check: bool = True
     hmac_shared_key: str
 
 
