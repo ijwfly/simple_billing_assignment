@@ -1,4 +1,5 @@
 import asyncio
+from multiprocessing import cpu_count
 from random import randint, choice
 from uuid import uuid4
 
@@ -14,8 +15,8 @@ class TestConcurrency:
     wallet_debit_url = '/billing/v1/wallet_debit/'
     p2p_url = '/billing/v1/wallet_p2p_transfer/'
 
-    wallets_count = 2
-    concurrency = 3
+    concurrency = cpu_count() * 2
+    wallets_count = cpu_count()
     actions_count = 1000
 
     wallet_balance = 100000

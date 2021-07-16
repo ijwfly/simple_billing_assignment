@@ -19,9 +19,7 @@ services:
   functional_tests:
     image: simple_billing
     entrypoint: >
-      sh -c './wait-for-it.sh -t 10 app:8080
-      && sleep 5
-      && pytest tests'
+      sh -c 'echo "sleeping 10 sec" && sleep 10 && pytest tests'
 #    entrypoint: sh -c 'while true; do echo "working..."; sleep 60; done'
     volumes:
       - ./:/usr/src/app/
