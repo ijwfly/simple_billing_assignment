@@ -105,11 +105,14 @@ async def billing_wallet_p2p_transfer(
         amount=wallet_p2p_transfer_request.amount,
         operation_id=wallet_p2p_transfer_request.operation_id,
     ), in_transaction() as connection:
+        from_wallet_id = wallet_p2p_transfer_request.from_wallet_id
+        to_wallet_id = wallet_p2p_transfer_request.to_wallet_id
+        if from_wallet_id == to_wallet_id:
+            raise BillingException(*BillingError.same_p2p_wallet)
         try:
-            from_wallet_id = wallet_p2p_transfer_request.from_wallet_id
-            to_wallet_id = wallet_p2p_transfer_request.to_wallet_id
             wallets = await Wallet.select_for_update().using_db(connection).filter(
-                id__in=[from_wallet_id, to_wallet_id]).order_by('id')
+                id__in=[from_wallet_id, to_wallet_id]
+            ).order_by('id')
             if len(wallets) < 2:
                 raise BillingException(*BillingError.wallet_not_found)
             if wallets[0].id == from_wallet_id:

@@ -47,6 +47,7 @@ class BillingError:
 
     wallet_already_exists = (201, 'Wallet already exists')
     wallet_not_found = (202, 'Wallet not found')
+    same_p2p_wallet = (203, 'Source and target wallets are the same')
 
     insufficient_funds = (301, 'Insufficient funds')
 
