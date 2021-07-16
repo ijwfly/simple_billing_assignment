@@ -1,6 +1,11 @@
 from asyncpg import Pool
 
 
+def chunks(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
 class DBHelper:
     def __init__(self, connection_pool: Pool):
         self.connection_pool = connection_pool
@@ -31,3 +36,8 @@ class DBHelper:
             amount = f'- {abs(amount)}'
         sql = f"update billing.wallet SET balance = balance {amount} where id = {wallet_id}"
         return await self.connection_pool.execute(sql)
+
+    async def get_sum_of_money(self):
+        sql = "SELECT SUM(balance) as sum FROM billing.wallet"
+        result = await self.connection_pool.fetchrow(sql)
+        return result['sum']

@@ -88,7 +88,7 @@ async def billing_wallet_debit(
 
 @router.post(
     '/wallet_p2p_transfer/',
-    summary='Списание средств с кошелька',
+    summary='Перевод средств на другой кошелёк',
     response_model=WalletP2PTransferResponse,
 )
 async def billing_wallet_p2p_transfer(
@@ -106,19 +106,22 @@ async def billing_wallet_p2p_transfer(
         operation_id=wallet_p2p_transfer_request.operation_id,
     ), in_transaction() as connection:
         try:
-            # TODO: можно доставать за один запрос
             from_wallet_id = wallet_p2p_transfer_request.from_wallet_id
-            from_wallet = await Wallet.select_for_update().using_db(connection).get(id=from_wallet_id)
-
             to_wallet_id = wallet_p2p_transfer_request.to_wallet_id
-            to_wallet = await Wallet.select_for_update().using_db(connection).get(id=to_wallet_id)
+            wallets = await Wallet.select_for_update().using_db(connection).filter(
+                id__in=[from_wallet_id, to_wallet_id]).order_by('id')
+            if len(wallets) < 2:
+                raise BillingException(*BillingError.wallet_not_found)
+            if wallets[0].id == from_wallet_id:
+                from_wallet, to_wallet = wallets
+            else:
+                to_wallet, from_wallet = wallets
         except DoesNotExist:
             raise BillingException(*BillingError.wallet_not_found)
 
         if from_wallet.balance < wallet_p2p_transfer_request.amount:
             raise BillingException(*BillingError.insufficient_funds)
 
-        # TODO: можно сохранять за один запрос
         from_wallet.balance -= wallet_p2p_transfer_request.amount
         to_wallet.balance += wallet_p2p_transfer_request.amount
         await from_wallet.save(using_db=connection)

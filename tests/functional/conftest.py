@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import uuid
 from base64 import b64encode
 
@@ -23,7 +22,6 @@ async def send_request(app_config):
         if app_config.auth.check:
             signer = HMACSigner(app_config.auth.hmac_shared_key)
             headers['X-Signature'] = b64encode(signer.create_signature(json.dumps(data).encode()))
-            logging.error(str(headers))
         return await client.post(url=url, json=data, headers=headers)
     yield _send_request
     await client.aclose()
