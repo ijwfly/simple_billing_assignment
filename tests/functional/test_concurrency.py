@@ -15,8 +15,8 @@ class TestConcurrency:
     p2p_url = '/billing/v1/wallet_p2p_transfer/'
 
     wallets_count = 2
-    concurrency = 5
-    actions_count = 10000
+    concurrency = 3
+    actions_count = 1000
 
     wallet_balance = 100000
     operation_amount = 100

@@ -4,9 +4,13 @@ services:
   app:
     build: .
     image: simple_billing
-    entrypoint: sh -c 'python main.py'
+    entrypoint: >
+      sh -c './wait-for-it.sh -t 10 postgres:5432
+      && python main.py'
+#    entrypoint: sh -c 'while true; do echo "working..."; sleep 60; done'
     volumes:
       - ./:/usr/src/app/
+      - ./utils/wait-for-it.sh:/usr/src/app/wait-for-it.sh:cached
     depends_on:
       - postgres
     ports:
@@ -14,10 +18,13 @@ services:
 
   functional_tests:
     image: simple_billing
-    entrypoint: sh -c 'pytest tests'
-    # entrypoint: sh -c 'while true; do foo; sleep 2; done'
+    entrypoint: >
+      sh -c './wait-for-it.sh -t 10 app:8080
+      && pytest tests'
+#    entrypoint: sh -c 'while true; do echo "working..."; sleep 60; done'
     volumes:
       - ./:/usr/src/app/
+      - ./utils/wait-for-it.sh:/usr/src/app/wait-for-it.sh:cached
     depends_on:
       - app
 
